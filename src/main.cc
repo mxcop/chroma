@@ -24,9 +24,9 @@ void printm(const char* label, const m3 m) {
 #else
     printf("constexpr glm::mat3 %s {\n    %ff, %ff, %ff,\n    %ff, %ff, %ff,\n    %ff, %ff, %ff\n};\n", label,
 #endif
-        m.m00, m.m10, m.m20,
-        m.m01, m.m11, m.m21,
-        m.m02, m.m12, m.m22
+        m.m00, m.m01, m.m02,
+        m.m10, m.m11, m.m12,
+        m.m20, m.m21, m.m22
     );
 }
 
