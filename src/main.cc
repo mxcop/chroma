@@ -20,9 +20,9 @@ void log_color(const char* label, const v3& c) {
 
 void printm(const char* label, const m3 m) {
 #if COMPACT_PRINTM
-    printf("constexpr glm::mat3 %s { %f, %f, %f, %f, %f, %f, %f, %f, %f };\n", label,
+    printf("constexpr glm::mat3 %s { %ff, %ff, %ff, %ff, %ff, %ff, %ff, %ff, %ff };\n", label,
 #else
-    printf("constexpr glm::mat3 %s {\n    %f, %f, %f,\n    %f, %f, %f,\n    %f, %f, %f\n};\n", label,
+    printf("constexpr glm::mat3 %s {\n    %ff, %ff, %ff,\n    %ff, %ff, %ff,\n    %ff, %ff, %ff\n};\n", label,
 #endif
         m.m00, m.m10, m.m20,
         m.m01, m.m11, m.m21,
@@ -31,26 +31,20 @@ void printm(const char* label, const m3 m) {
 }
 
 int main() {
-    const m3 r709_to_r2020 = cs_transform(SRGB_REC709, SRGB_REC2020);
+    const m3 r709_to_acescg = cs_transform(SRGB_REC709, ACES_CG);
 
     /* Test primary colors */
-    log_color("  red", mul(r709_to_r2020, v3 { 1.0f, 0.0f, 0.0f }));
-    log_color("green", mul(r709_to_r2020, v3 { 0.0f, 1.0f, 0.0f }));
-    log_color(" blue", mul(r709_to_r2020, v3 { 0.0f, 0.0f, 1.0f }));
+    log_color("  red", mul(r709_to_acescg, v3 { 1.0f, 0.0f, 0.0f }));
+    log_color("green", mul(r709_to_acescg, v3 { 0.0f, 1.0f, 0.0f }));
+    log_color(" blue", mul(r709_to_acescg, v3 { 0.0f, 0.0f, 1.0f }));
     
     /* Log color transform matrices */
-    printf("\n~ srgb matrices ~\n");
-    printm("r709_to_r2020", cs_transform(SRGB_REC709, SRGB_REC2020));
-    printm("r2020_to_r709", cs_transform(SRGB_REC2020, SRGB_REC709));
-    
-    printf("\n~ acescg matrices ~\n");
-    printm("r709_to_acescg", cs_transform(SRGB_REC709, ACES_CG));
-    printm("acescg_to_r709", cs_transform(ACES_CG, SRGB_REC709));
-    
-    printf("\n~ aces2065 matrices ~\n");
-    printm("acescg_to_aces2065", cs_transform(ACES_CG, ACES_2065_1));
-    printm("aces2065_to_acescg", cs_transform(ACES_2065_1, ACES_CG));
+    printm("R709_TO_ACESCG", cs_transform(SRGB_REC709, ACES_CG));
+    printm("ACESCG_TO_R709", cs_transform(ACES_CG, SRGB_REC709));
+    printm("ACESCG_TO_ACES2065", cs_transform(ACES_CG, ACES_2065_1));
+    printm("ACES2065_TO_ACESCG", cs_transform(ACES_2065_1, ACES_CG));
 
+    printm("XYZ_TO_ACESCG", inverse(rgb_to_xyz(ACES_CG)));    
 
     return EXIT_SUCCESS;
 }

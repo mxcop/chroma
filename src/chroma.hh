@@ -42,7 +42,29 @@ m3 rgb_to_xyz(const Chromaticities& c) {
     };
 }
 
+/* Bradford matrix (XYZ → "cone response" LMS-like space) */
+constexpr m3 XYZ_TO_BRADFORD = { 0.8951f, 0.2664f, -0.1614f, -0.7502f, 1.7135f, 0.0367f, 0.0389f, -0.0685f, 1.0296f };
+constexpr m3 BRADFORD_TO_XYZ = { 0.9869929f, -0.1470543f, 0.1599627f, 0.4323053f, 0.5183603f, 0.0492912f, -0.0085287f, 0.0400428f, 0.9684867f };
+
+/* Calculate chromatic adaptation matrix. */
+m3 chromatic_adaptation(const Chromaticities& src, const Chromaticities& dst) {
+    /* Convert white points to cone response */
+    const v3 src_lms = mul(XYZ_TO_BRADFORD, v3 { src.wx, 1.0f, src.wy });
+    const v3 dst_lms = mul(XYZ_TO_BRADFORD, v3 { dst.wx, 1.0f, dst.wy });
+
+    /* Scaling matrix in lms space */
+    const m3 scale = {
+        dst_lms.x / src_lms.x, 0.0f, 0.0f,
+        0.0f, dst_lms.y / src_lms.y, 0.0f,
+        0.0f, 0.0f, dst_lms.z / src_lms.z
+    };
+
+    /* Full adaptation: XYZ -> LMS -> scale -> XYZ */
+    return mul(BRADFORD_TO_XYZ, mul(scale, XYZ_TO_BRADFORD));
+}
+
 /* Calculate a color-space transform matrix. */
 m3 cs_transform(const Chromaticities& src, const Chromaticities& dst) {
-    return mul(inverse(rgb_to_xyz(dst)), rgb_to_xyz(src));
+    /* Combine matrices (from src rgb to CIE xyz) and (from CIE xyz to dst rgb) */
+    return mul(inverse(rgb_to_xyz(dst)), mul(chromatic_adaptation(src, dst), rgb_to_xyz(src)));
 }
